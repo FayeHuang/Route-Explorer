@@ -1,21 +1,24 @@
-# ui
+# Route Explorer
 
-> A Vue.js project
+https://routeexplorer-eed26.firebaseapp.com/
+
+軌跡探索工具
 
 ## Build Setup
 
+* 測試環境：https://ide.c9.io/fayehuang/route01
+* 上線環境：https://console.firebase.google.com/project/routeexplorer-eed26/overview
+
 ``` bash
 # install dependencies
-npm install
+yarn install
 
 # serve with hot reload at localhost:8080
-npm run dev
+yarn start
 
 # build for production with minification
-npm run build
+yarn build
 
 # build for production and view the bundle analyzer report
-npm run build --report
+yarn build --report
 ```
-
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
