@@ -218,7 +218,8 @@ export default {
   name: 'app',
   data() {
     return {
-      initLoading: null,
+      mapState: window.mapState,
+      initLoading: Loading.service({ fullscreen: true }),
       isEmptyPage: true,
       map: null,
       addRouteDialogShow: false,
@@ -251,6 +252,99 @@ export default {
     },
   },
   methods: {
+    initPage() {
+      // init map
+      const map = new window.google.maps.Map(this.$refs.map, {
+        zoom: 12,
+        center: { lat: 25.034020, lng: 121.564478 }, // Taipei 101
+        fullscreenControl: false,
+        mapTypeControl: false,
+        streetViewControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_TOP,
+        },
+        zoomControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_TOP,
+        },
+      });
+      this.map = map;
+      // load init data
+      if (!this.isEmptyPage) {
+        const path = this.$route.path.split('/')[1];
+        firebase.database().ref('pages').once('value').then((snapshot) => {
+          if (snapshot.val() &&
+              Object.keys(snapshot.val()).includes(path)) {
+            this.saveId = path;
+            const routes = snapshot.val()[path];
+            let fitMarkers = [];
+            this.routes = Object.keys(routes).map((routeId) => {
+              const route = routes[routeId];
+              route.markerCluster = initMarkerClusterer(this.map, route.color);
+              route.fitMarkers = [];
+              const records = route.data.map((record, index) => {
+                const time = moment(record[0]);
+                const lat = record[1];
+                const lng = record[2];
+                const marker = initMarker(this.map, {
+                  routeName: route.name,
+                  routeColor: route.color,
+                  isFirstRecord: index === 0,
+                  isLastRecord: index === route.data.length - 1,
+                  index,
+                  time,
+                  lat,
+                  lng,
+                });
+                if (route.show) {
+                  route.fitMarkers = [...route.fitMarkers, marker];
+                }
+                return [time, lat, lng, marker];
+              });
+              if (route.show) {
+                fitMarkers = [...fitMarkers, ...route.fitMarkers];
+                showRoute(this.map, {
+                  routeColor: route.color,
+                  markerCluster: route.markerCluster,
+                  markers: route.fitMarkers,
+                  firstMarker: route.fitMarkers[0],
+                  lastMarker: route.fitMarkers[route.fitMarkers.length - 1],
+                });
+              }
+              // update data "defaultBeginTime", "beginTime"
+              if (!this.defaultBeginTime ||
+                  (this.defaultBeginTime && records[0][0].toDate() < this.defaultBeginTime)) {
+                this.defaultBeginTime = records[0][0].toDate();
+                this.beginTime = this.defaultBeginTime;
+              }
+              // update data "defaultEndTime", "endTime"
+              if (!this.defaultEndTime ||
+                  (this.defaultEndTime &&
+                   records[records.length - 1][0].toDate() > this.defaultEndTime)) {
+                this.defaultEndTime = records[records.length - 1][0].toDate();
+                this.endTime = this.defaultEndTime;
+              }
+              return {
+                ...route,
+                id: routeId,
+                data: records,
+              };
+            });
+            if (fitMarkers.length > 0) {
+              setMapCenterZoom(this.map, fitMarkers);
+            }
+          } else {
+            this.isEmptyPage = true;
+            this.alertDialogShow = true;
+          }
+          this.$nextTick(() => {
+            this.initLoading.close();
+          });
+        });
+      } else {
+        this.$nextTick(() => {
+          this.initLoading.close();
+        });
+      }
+    },
     drawAllRoutes() {
       let fitMarkers = [];
       this.routes.filter(route => route.show).forEach((route, routeIndex) => {
@@ -569,102 +663,28 @@ export default {
     },
   },
   created() {
+    this.initLoading = Loading.service({ fullscreen: true });
     const routeName = this.$route.name;
     if (routeName === 'pages') {
       this.isEmptyPage = false;
-      this.initLoading = Loading.service({ fullscreen: true });
     } else {
       this.isEmptyPage = true;
     }
   },
   mounted() {
-    // init map
-    const map = new window.google.maps.Map(this.$refs.map, {
-      zoom: 12,
-      center: { lat: 25.034020, lng: 121.564478 }, // Taipei 101
-      fullscreenControl: false,
-      mapTypeControl: false,
-      streetViewControlOptions: {
-        position: window.google.maps.ControlPosition.RIGHT_TOP,
-      },
-      zoomControlOptions: {
-        position: window.google.maps.ControlPosition.RIGHT_TOP,
-      },
-    });
-    this.map = map;
-    // load init data
-    if (!this.isEmptyPage) {
-      const path = this.$route.path.split('/')[1];
-      firebase.database().ref('pages').once('value').then((snapshot) => {
-        if (snapshot.val() &&
-            Object.keys(snapshot.val()).includes(path)) {
-          this.saveId = path;
-          const routes = snapshot.val()[path];
-          let fitMarkers = [];
-          this.routes = Object.keys(routes).map((routeId) => {
-            const route = routes[routeId];
-            route.markerCluster = initMarkerClusterer(this.map, route.color);
-            route.fitMarkers = [];
-            const records = route.data.map((record, index) => {
-              const time = moment(record[0]);
-              const lat = record[1];
-              const lng = record[2];
-              const marker = initMarker(this.map, {
-                routeName: route.name,
-                routeColor: route.color,
-                isFirstRecord: index === 0,
-                isLastRecord: index === route.data.length - 1,
-                index,
-                time,
-                lat,
-                lng,
-              });
-              if (route.show) {
-                route.fitMarkers = [...route.fitMarkers, marker];
-              }
-              return [time, lat, lng, marker];
-            });
-            if (route.show) {
-              fitMarkers = [...fitMarkers, ...route.fitMarkers];
-              showRoute(this.map, {
-                routeColor: route.color,
-                markerCluster: route.markerCluster,
-                markers: route.fitMarkers,
-                firstMarker: route.fitMarkers[0],
-                lastMarker: route.fitMarkers[route.fitMarkers.length - 1],
-              });
-            }
-            // update data "defaultBeginTime", "beginTime"
-            if (!this.defaultBeginTime ||
-                (this.defaultBeginTime && records[0][0].toDate() < this.defaultBeginTime)) {
-              this.defaultBeginTime = records[0][0].toDate();
-              this.beginTime = this.defaultBeginTime;
-            }
-            // update data "defaultEndTime", "endTime"
-            if (!this.defaultEndTime ||
-                (this.defaultEndTime &&
-                 records[records.length - 1][0].toDate() > this.defaultEndTime)) {
-              this.defaultEndTime = records[records.length - 1][0].toDate();
-              this.endTime = this.defaultEndTime;
-            }
-            return {
-              ...route,
-              id: routeId,
-              data: records,
-            };
-          });
-          if (fitMarkers.length > 0) {
-            setMapCenterZoom(this.map, fitMarkers);
-          }
-        } else {
-          this.isEmptyPage = true;
-          this.alertDialogShow = true;
-        }
-        this.$nextTick(() => {
-          this.initLoading.close();
-        });
-      });
+    if (this.mapState) {
+      this.initPage();
     }
+  },
+  watch: {
+    // we watch the state for changes in case the map was not ready when this
+    // component is first rendered
+    // the watch will trigger when `initMap` will turn from `false` to `true`
+    mapState: function (value) {
+      if (value) {
+        this.initPage();
+      }
+    },
   },
 };
 </script>

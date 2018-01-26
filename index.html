@@ -16,11 +16,18 @@
   <body>
     <div id="app"></div>
     <!-- built files will be auto injected -->
-    
+    <!-- How to initiate a callback in script tag inside a vue.js component? -->
+    <!-- https://forum.vuejs.org/t/how-to-initiate-a-callback-in-script-tag-inside-a-vue-js-component/22797 -->
+    <script>
+      window.mapState = false;
+      function initMap () {
+        window.mapState = true;
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?callback=initMap" async defer></script>
     <!-- [markerclusterer doc] -->
     <!-- http://web.archive.org/web/20160122183325/http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/docs/reference.html -->
     <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js" async defer></script>
     <script src="https://use.fontawesome.com/releases/v5.0.4/js/all.js" defer></script>
   </body>
 </html>
