@@ -154,11 +154,11 @@
         :visible.sync="saveDialogShow"
         width="60%">
         <div v-if="isEmptyPage" :style="{fontSize:'16px'}">
-          資料 ID 是 <b>{{saveId}}</b>，資料儲存後可以隨時連到 <b>http://route01-fayehuang.c9users.io/{{saveId}}</b> 繼續探索資料。<br /><br />
-          確定儲存資料？確定後頁面將會被導到 <b>http://route01-fayehuang.c9users.io/{{saveId}}</b>
+          資料 ID 是 <b>{{saveId}}</b>，資料儲存後可以隨時連到 <b>https://routeexplorer-eed26.firebaseapp.com/{{saveId}}</b> 繼續探索資料。<br /><br />
+          確定儲存資料？確定後頁面將會被導到 <b>https://routeexplorer-eed26.firebaseapp.com/{{saveId}}</b>
         </div>
         <div v-else :style="{fontSize:'16px'}">
-          資料 ID 是 <b>{{saveId}}</b>，資料儲存後可以隨時連到 <b>http://route01-fayehuang.c9users.io/{{saveId}}</b> 繼續探索資料。<br /><br />
+          資料 ID 是 <b>{{saveId}}</b>，資料儲存後可以隨時連到 <b>https://routeexplorer-eed26.firebaseapp.com/{{saveId}}</b> 繼續探索資料。<br /><br />
           確定儲存資料？
         </div>
         <span slot="footer" class="dialog-footer">
