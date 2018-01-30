@@ -218,7 +218,6 @@ export default {
   name: 'app',
   data() {
     return {
-      mapState: window.mapState,
       initLoading: Loading.service({ fullscreen: true }),
       isEmptyPage: true,
       map: null,
@@ -244,6 +243,7 @@ export default {
       endTime: null,
       sliderVal: 0,
       sliderAuto: null,
+      zoomCount: 10,
     };
   },
   computed: {
@@ -305,8 +305,8 @@ export default {
                   routeColor: route.color,
                   markerCluster: route.markerCluster,
                   markers: route.fitMarkers,
-                  firstMarker: route.fitMarkers[0],
-                  lastMarker: route.fitMarkers[route.fitMarkers.length - 1],
+                  fitAll: true,
+                  count: this.zoomCount,
                 });
               }
               // update data "defaultBeginTime", "beginTime"
@@ -352,16 +352,15 @@ export default {
         if (route.fitMarkers && route.fitMarkers.length > 0) {
           hideRoute({
             markerCluster: route.markerCluster,
-            firstMarker: route.fitMarkers[0],
-            lastMarker: route.fitMarkers[route.fitMarkers.length - 1],
+            markers: routeFitMarkers,
           });
         }
         showRoute(this.map, {
           routeColor: route.color,
           markerCluster: route.markerCluster,
           markers: routeFitMarkers,
-          firstMarker: routeFitMarkers[0],
-          lastMarker: routeFitMarkers[routeFitMarkers.length - 1],
+          fitAll: true,
+          count: this.zoomCount,
         });
         this.routes[routeIndex].fitMarkers = routeFitMarkers;
         // update data "defaultBeginTime", "beginTime"
@@ -400,21 +399,19 @@ export default {
         if (route.fitMarkers && route.fitMarkers.length > 0) {
           hideRoute({
             markerCluster: route.markerCluster,
-            firstMarker: route.fitMarkers[0],
-            lastMarker: route.fitMarkers[route.fitMarkers.length - 1],
+            markers: route.fitMarkers,
           });
         }
         showRoute(this.map, {
           routeColor: route.color,
           markerCluster: route.markerCluster,
           markers: routeFitMarkers,
-          firstMarker: routeFitMarkers[0],
-          lastMarker: routeFitMarkers[routeFitMarkers.length - 1],
+          count: this.zoomCount,
+          fitAll,
         });
         this.routes[routeIndex].fitMarkers = routeFitMarkers;
-        const count = 30;
-        if (!fitAll && routeFitMarkers.length > count) {
-          fitMarkers = [...fitMarkers, ...routeFitMarkers.slice(-count)];
+        if (!fitAll && routeFitMarkers.length > this.zoomCount) {
+          fitMarkers = [...fitMarkers, ...routeFitMarkers.slice(-this.zoomCount)];
         } else {
           fitMarkers = [...fitMarkers, ...routeFitMarkers];
         }
@@ -531,8 +528,7 @@ export default {
       const targetRoute = this.routes.find(route => route.id === id);
       hideRoute({
         markerCluster: targetRoute.markerCluster,
-        firstMarker: targetRoute.fitMarkers[0],
-        lastMarker: targetRoute.fitMarkers[targetRoute.fitMarkers.length - 1],
+        markers: targetRoute.fitMarkers,
       });
       this.routes = this.routes.filter(route => route.id !== id);
       if (this.routes.length === 0) {
@@ -612,8 +608,7 @@ export default {
       } else {
         hideRoute({
           markerCluster: targetRoute.markerCluster,
-          firstMarker: targetRoute.fitMarkers[0],
-          lastMarker: targetRoute.fitMarkers[targetRoute.fitMarkers.length - 1],
+          markers: targetRoute.fitMarkers,
         });
       }
     },
@@ -672,19 +667,7 @@ export default {
     }
   },
   mounted() {
-    if (this.mapState) {
-      this.initPage();
-    }
-  },
-  watch: {
-    // we watch the state for changes in case the map was not ready when this
-    // component is first rendered
-    // the watch will trigger when `initMap` will turn from `false` to `true`
-    mapState: function (value) {
-      if (value) {
-        this.initPage();
-      }
-    },
+    this.initPage();
   },
 };
 </script>

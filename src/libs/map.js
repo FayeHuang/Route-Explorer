@@ -61,27 +61,63 @@ export const initInfoWindow = ({
 };
 export const hideRoute = ({
   markerCluster,
-  firstMarker,
-  lastMarker,
+  markers,
 }) => {
   markerCluster.clearMarkers();
-  firstMarker.setMap(null);
-  lastMarker.setMap(null);
+  markers.forEach(marker => marker.setMap(null));
 };
 export const showRoute = (map, {
   routeColor,
   markerCluster,
   markers,
-  firstMarker,
-  lastMarker,
+  fitAll,
+  count,
 }) => {
-  // markerCluster.clearMarkers();
-  // markers.forEach(m => m.setMap(null));
-  markerCluster.addMarkers(markers.slice(1, markers.length - 1));
-  firstMarker.setMap(map);
-  firstMarker.setIcon(startSymbol(routeColor));
-  lastMarker.setMap(map);
-  lastMarker.setIcon(endSymbol(routeColor));
+  if (markers.length === 1) {
+    markers[markers.length - 1].setMap(map);
+    markers[markers.length - 1].setIcon(endSymbol(routeColor));
+  } else if (markers.length === 2) {
+    markers[0].setMap(map);
+    markers[0].setIcon(startSymbol(routeColor));
+    markers[markers.length - 1].setMap(map);
+    markers[markers.length - 1].setIcon(endSymbol(routeColor));
+  } else if (markers.length > 2 && fitAll) {
+    markerCluster.addMarkers(markers.slice(1, markers.length - 1));
+    markers[0].setMap(map);
+    markers[0].setIcon(startSymbol(routeColor));
+    markers[markers.length - 1].setMap(map);
+    markers[markers.length - 1].setIcon(endSymbol(routeColor));
+  } else if (markers.length > 2 && !fitAll) {
+    if (markers.length <= count) {
+      markers.slice(1, markers.length - 1).forEach((marker) => {
+        marker.setMap(map);
+        marker.setIcon(placeSymbol(routeColor));
+      });
+      markers[0].setMap(map);
+      markers[0].setIcon(startSymbol(routeColor));
+      markers[markers.length - 1].setMap(map);
+      markers[markers.length - 1].setIcon(endSymbol(routeColor));
+    } else {
+      const markers1 = markers.slice(0, markers.length - count);
+      const markers2 = markers.slice(markers.length - count, markers.length);
+      if (markers1.length > 1) {
+        markerCluster.addMarkers(markers.slice(1, markers1.length));
+        markers1[0].setMap(map);
+        markers1[0].setIcon(startSymbol(routeColor));
+      } else if (markers1.length === 1) {
+        markers1[0].setMap(map);
+        markers1[0].setIcon(startSymbol(routeColor));
+      }
+      markers2.forEach((marker, index) => {
+        marker.setMap(map);
+        if (index !== markers2.length - 1) {
+          marker.setIcon(placeSymbol(routeColor));
+        } else {
+          marker.setIcon(endSymbol(routeColor));
+        }
+      });
+    }
+  }
 };
 export const initMarker = (map, {
   routeName,
@@ -107,11 +143,8 @@ export const initMarker = (map, {
   });
   // init marker info window
   const infowindow = initInfoWindow({ routeName, index, time, lat, lng });
-  marker.addListener('mouseover', () => {
+  marker.addListener('click', () => {
     infowindow.open(map, marker);
-  });
-  marker.addListener('mouseout', () => {
-    infowindow.close(map, marker);
   });
   return marker;
 };
