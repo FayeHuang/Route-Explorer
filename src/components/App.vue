@@ -7,7 +7,7 @@
       </div>
     </el-header>
     <el-container >
-      <el-aside :style="{backgroundColor:'#4d4f5c', width:'240px'}">
+      <el-aside :style="{backgroundColor:'#4d4f5c', width:'280px'}">
         <div class="block" :style="{padding:8+'px'}">
           <!--add route & save route button -->
           <el-row :gutter="4">
